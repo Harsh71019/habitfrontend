@@ -7,7 +7,10 @@ import { DashboardPage } from './pages/DashboardPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { HabitsPage } from './pages/HabitsPage';
 import { TasksPage } from './pages/TasksPage';
+import { DailyTasksPage } from './pages/DailyTasksPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
+import { TimingAnalyticsPage } from './pages/TimingAnalyticsPage';
+import { HowLongPage } from './pages/HowLongPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 
@@ -76,10 +79,34 @@ function AppRoutes() {
         } 
       />
       <Route 
+        path="/daily-tasks" 
+        element={
+          <ProtectedRoute>
+            <DailyTasksPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
         path="/analytics" 
         element={
           <ProtectedRoute>
             <AnalyticsPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/timing-analytics" 
+        element={
+          <ProtectedRoute>
+            <TimingAnalyticsPage />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/how-long" 
+        element={
+          <ProtectedRoute>
+            <HowLongPage />
           </ProtectedRoute>
         } 
       />

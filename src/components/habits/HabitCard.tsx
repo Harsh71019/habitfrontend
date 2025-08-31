@@ -159,16 +159,16 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
   return (
     <Card 
       ref={cardRef}
-      className={`relative transition-all duration-500 hover:shadow-lg hover:-translate-y-1 ${
+      className={`relative transition-all duration-500 hover:shadow-lg hover:-translate-y-1 bg-card dark:bg-card border-border dark:border-border ${
         justCompleted ? 'ring-4 ring-green-400 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 animate-pulse' :
         isCompleted ? 'ring-2 ring-green-200 bg-green-50/50 dark:bg-green-950/20 border-green-300 dark:border-green-700' : 
-        'hover:bg-accent/50'
+        'hover:bg-accent/50 dark:hover:bg-accent/50'
       } ${!habit.isActive ? 'opacity-60' : ''}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-semibold text-lg">{habit.name}</h3>
+              <h3 className="font-semibold text-lg text-foreground">{habit.name}</h3>
               {!habit.isActive && (
                 <Badge variant="secondary" className="text-xs">
                   Inactive
@@ -210,12 +210,12 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
-                <MoreVertical className="w-4 h-4 text-gray-600" />
+                <MoreVertical className="w-4 h-4 text-muted-foreground" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit?.(habit)}>
-                <Edit className="w-4 h-4 mr-2 text-blue-600" />
+                <Edit className="w-4 h-4 mr-2 text-blue-600 dark:text-blue-400" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem 
@@ -224,12 +224,12 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
               >
                 {habit.isActive ? (
                   <>
-                    <PowerOff className="w-4 h-4 mr-2 text-orange-600" />
+                    <PowerOff className="w-4 h-4 mr-2 text-orange-600 dark:text-orange-400" />
                     Deactivate
                   </>
                 ) : (
                   <>
-                    <Power className="w-4 h-4 mr-2 text-green-600" />
+                    <Power className="w-4 h-4 mr-2 text-green-600 dark:text-green-400" />
                     Activate
                   </>
                 )}
@@ -237,10 +237,10 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={() => deleteHabitMutation.mutate()}
-                className="text-red-600"
+                className="text-red-600 dark:text-red-400"
                 disabled={deleteHabitMutation.isPending}
               >
-                <Trash2 className="w-4 h-4 mr-2 text-red-600" />
+                <Trash2 className="w-4 h-4 mr-2 text-red-600 dark:text-red-400" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -266,14 +266,14 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
               <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className="text-center">
-                    <div className="text-lg font-bold text-blue-600">
+                    <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
                       {stats.data.currentStreak}
                     </div>
                     <div className="text-xs text-muted-foreground">day streak</div>
                   </div>
                   <div className="h-8 w-px bg-border" />
                   <div className="text-center">
-                    <div className="text-lg font-bold text-green-600">
+                    <div className="text-lg font-bold text-green-600 dark:text-green-400">
                       {Math.round(stats.data.completionRate * 100)}%
                     </div>
                     <div className="text-xs text-muted-foreground">complete</div>
@@ -324,7 +324,7 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
         ) : (
           <div className="space-y-4 p-4 bg-blue-50/50 dark:bg-blue-950/20 rounded-lg border-2 border-blue-200 dark:border-blue-800">
             <div className="text-center">
-              <Target className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+              <Target className="w-6 h-6 text-blue-600 dark:text-blue-400 mx-auto mb-2" />
               <h4 className="font-medium text-blue-700 dark:text-blue-300">
                 Enter your {habit.target?.unit || 'value'}
               </h4>
@@ -344,7 +344,7 @@ export function HabitCard({ habit, onEdit }: HabitCardProps) {
                 className="flex-1 text-center text-lg font-medium"
                 autoFocus
               />
-              <span className="text-sm font-medium text-blue-600 min-w-0">{habit.target?.unit}</span>
+              <span className="text-sm font-medium text-blue-600 dark:text-blue-400 min-w-0">{habit.target?.unit}</span>
             </div>
             
             <div className="flex gap-2">

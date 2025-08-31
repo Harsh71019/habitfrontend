@@ -75,6 +75,7 @@ export function SettingsPage() {
       email: currentUser?.data?.email || '',
       timezone: currentUser?.data?.timezone || 'America/New_York',
     },
+    mode: 'onChange',
   });
 
   const passwordForm = useForm<PasswordFormData>({
@@ -84,38 +85,32 @@ export function SettingsPage() {
       newPassword: '',
       confirmPassword: '',
     },
+    mode: 'onChange',
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: (data: ProfileFormData) => {
-      // Backend not implemented yet
-      return Promise.reject(new Error('Profile update not yet implemented in backend'));
-    },
+    mutationFn: (data: ProfileFormData) => api.updateUserProfile(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['current-user'] });
     },
   });
 
   const changePasswordMutation = useMutation({
-    mutationFn: (data: PasswordFormData) => {
-      // Backend not implemented yet  
-      return Promise.reject(new Error('Password change not yet implemented in backend'));
-    },
+    mutationFn: (data: PasswordFormData) => api.changePassword({
+      currentPassword: data.currentPassword,
+      newPassword: data.newPassword
+    }),
     onSuccess: () => {
       passwordForm.reset();
     },
   });
 
   const onUpdateProfile = async (data: ProfileFormData) => {
-    console.log('Profile update attempted:', data);
-    // Show user that feature is not available
-    alert('Profile update functionality is not yet implemented in the backend.');
+    updateProfileMutation.mutate(data);
   };
 
   const onChangePassword = async (data: PasswordFormData) => {
-    console.log('Password change attempted');
-    // Show user that feature is not available
-    alert('Password change functionality is not yet implemented in the backend.');
+    changePasswordMutation.mutate(data);
   };
 
   const timezones = [
@@ -287,19 +282,17 @@ export function SettingsPage() {
                     />
 
                     <div className="flex justify-end pt-4">
-                      <div className="flex items-center gap-3">
-                        <Badge variant="outline" className="text-xs text-orange-600">
-                          Backend Not Implemented
-                        </Badge>
-                        <Button 
-                          type="submit" 
-                          disabled={true}
-                          className="flex items-center gap-2"
-                        >
-                          <Save className="w-4 h-4" />
-                          Save Changes
-                        </Button>
-                      </div>
+                      <Button 
+                        type="submit" 
+                        disabled={updateProfileMutation.isPending || !profileForm.formState.isDirty}
+                        className="flex items-center gap-2"
+                      >
+                        {updateProfileMutation.isPending && (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        )}
+                        <Save className="w-4 h-4" />
+                        Save Changes
+                      </Button>
                     </div>
                   </form>
                 </Form>
@@ -383,7 +376,7 @@ export function SettingsPage() {
                     <div className="flex justify-end pt-4">
                       <Button 
                         type="submit" 
-                        disabled={changePasswordMutation.isPending}
+                        disabled={changePasswordMutation.isPending || !passwordForm.formState.isDirty}
                         className="flex items-center gap-2"
                       >
                         {changePasswordMutation.isPending && (
@@ -558,202 +551,6 @@ export function SettingsPage() {
         </div>
       </div>
 
-      {/* Profile Section Content */}
-      {activeSection === 'profile' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5" />
-              Profile Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...profileForm}>
-              <form onSubmit={profileForm.handleSubmit(onUpdateProfile)} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                    control={profileForm.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={profileForm.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={profileForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email Address</FormLabel>
-                      <FormControl>
-                        <Input type="email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={profileForm.control}
-                  name="timezone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Timezone</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <Globe className="w-4 h-4 mr-2" />
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {timezones.map((tz) => (
-                            <SelectItem key={tz} value={tz}>
-                              {tz.replace('_', ' ')}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex justify-end pt-4">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="text-xs text-orange-600">
-                      Backend Not Implemented
-                    </Badge>
-                    <Button 
-                      type="submit" 
-                      disabled={true}
-                      className="flex items-center gap-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      Save Changes
-                    </Button>
-                  </div>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Security Section Content */}
-      {activeSection === 'security' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              Change Password
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...passwordForm}>
-              <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
-                <FormField
-                  control={passwordForm.control}
-                  name="currentPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Current Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input 
-                            type={showPassword ? 'text' : 'password'} 
-                            {...field} 
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                          >
-                            {showPassword ? (
-                              <EyeOff className="w-4 h-4 text-muted-foreground" />
-                            ) : (
-                              <Eye className="w-4 h-4 text-muted-foreground" />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={passwordForm.control}
-                  name="newPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>New Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Must be at least 6 characters long
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={passwordForm.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm New Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex justify-end pt-4">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="text-xs text-orange-600">
-                      Backend Not Implemented
-                    </Badge>
-                    <Button 
-                      type="submit" 
-                      disabled={true}
-                      className="flex items-center gap-2"
-                    >
-                      <Shield className="w-4 h-4" />
-                      Change Password
-                    </Button>
-                  </div>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

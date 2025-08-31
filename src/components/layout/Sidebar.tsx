@@ -1,4 +1,4 @@
-import { Home, Target, Calendar, BarChart3, CheckSquare, Settings, User } from 'lucide-react';
+import { Home, Target, Calendar, BarChart3, CheckSquare, Settings, User, Clock, Timer, ListTodo, LogOut } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -9,7 +9,10 @@ const navigation = [
   { name: 'Habits', href: '/habits', icon: Target },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
+  { name: 'Daily Tasks', href: '/daily-tasks', icon: ListTodo },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Timing Analytics', href: '/timing-analytics', icon: Clock },
+  { name: 'How Long', href: '/how-long', icon: Timer },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -63,8 +66,9 @@ export function Sidebar() {
           variant="ghost"
           size="sm"
           onClick={logout}
-          className="w-full justify-start"
+          className="w-full justify-start gap-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
         >
+          <LogOut className="w-4 h-4" />
           Sign out
         </Button>
       </div>

@@ -148,9 +148,13 @@ class ApiClient {
     });
   }
 
-  // Category endpoints - using statistics endpoint since category routes are not implemented yet
+  // Category endpoints
   async getCategories(params?: { page?: number; limit?: number }) {
-    return this.request<{ data: Category[] }>(`/statistics/categories`);
+    const searchParams = new URLSearchParams();
+    if (params?.page) searchParams.append('page', params.page.toString());
+    if (params?.limit) searchParams.append('limit', params.limit.toString());
+    
+    return this.request<PaginationResponse<Category>>(`/categories?${searchParams}`);
   }
 
   async createCategory(category: {
@@ -239,7 +243,7 @@ class ApiClient {
     });
   }
 
-  async getHabitCompletions(
+  async getHabitCompletionsByHabit(
     habitId: string,
     params?: {
       startDate?: string;
@@ -298,6 +302,21 @@ class ApiClient {
         longestStreak: number;
       }>
     >('/habits/streaks');
+  }
+
+  async getHabitCompletions(date: string) {
+    return this.request<
+      Array<{
+        id: string;
+        habitId: string;
+        habitName: string;
+        date: string;
+        completed: boolean;
+        value?: number;
+        notes?: string;
+        createdAt: string;
+      }>
+    >(`/habits/completions/${date}`);
   }
 
   // Task endpoints
@@ -431,6 +450,165 @@ class ApiClient {
 
     return this.request<ProductivityInsights>(`/statistics/insights?${searchParams}`);
   }
+
+  async getDailyTaskAnalytics() {
+    return this.request<DailyTaskAnalytics>('/statistics/daily-tasks');
+  }
+
+  async getDailyTaskOverview() {
+    return this.request<DailyTaskOverview>('/statistics/daily-tasks/overview');
+  }
+
+  // Timing Analytics Methods
+  async getTimingAnalytics(params?: {
+    days?: number;
+  }) {
+    const searchParams = new URLSearchParams();
+    if (params?.days) searchParams.append('days', params.days.toString());
+
+    return this.request<TimingAnalytics>(`/timing-analytics?${searchParams}`);
+  }
+
+  async getLoginPatterns(params?: {
+    days?: number;
+  }) {
+    const searchParams = new URLSearchParams();
+    if (params?.days) searchParams.append('days', params.days.toString());
+
+    return this.request<{ 
+      loginPatterns: TimingAnalytics['loginPatterns']; 
+      summary: Partial<TimingAnalytics['summary']>; 
+    }>(`/timing-analytics/login-patterns?${searchParams}`);
+  }
+
+  async getHabitTimingPatterns(params?: {
+    days?: number;
+  }) {
+    const searchParams = new URLSearchParams();
+    if (params?.days) searchParams.append('days', params.days.toString());
+
+    return this.request<{ 
+      habitCompletionPatterns: TimingAnalytics['habitCompletionPatterns']; 
+      summary: Partial<TimingAnalytics['summary']>; 
+    }>(`/timing-analytics/habit-patterns?${searchParams}`);
+  }
+
+  async getPeakPerformanceInsights(params?: {
+    days?: number;
+  }) {
+    const searchParams = new URLSearchParams();
+    if (params?.days) searchParams.append('days', params.days.toString());
+
+    return this.request<PeakPerformanceInsights>(`/timing-analytics/peak-insights?${searchParams}`);
+  }
+
+  async recordLogin(data?: {
+    deviceInfo?: {
+      userAgent?: string;
+      platform?: string;
+      browser?: string;
+    };
+    timezone?: string;
+  }) {
+    return this.request<{ message: string }>('/timing-analytics/record-login', {
+      method: 'POST',
+      body: JSON.stringify(data || {})
+    });
+  }
+
+  async recordLogout(sessionId?: string) {
+    return this.request<{ message: string }>('/timing-analytics/record-logout', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId })
+    });
+  }
+
+  // How Long endpoints
+  async getCountdownData() {
+    return this.request<{
+      upcoming: CountdownTask[];
+      overdue: CountdownTask[];
+      birthdays: CountdownTask[];
+      summary: {
+        totalUpcoming: number;
+        totalOverdue: number;
+        totalBirthdays: number;
+        nextDeadline: CountdownTask | null;
+      };
+    }>('/how-long/countdown');
+  }
+
+  async getAppUsageStats() {
+    return this.request<AppUsageStats>('/how-long/app-usage');
+  }
+
+  async getTimeRemainingSummary() {
+    return this.request<{
+      urgent: number;
+      thisWeek: number;
+      overdue: number;
+    }>('/how-long/summary');
+  }
+
+  // Daily Tasks endpoints
+  async getDailyTasks() {
+    return this.request<DailyTask[]>('/daily-tasks');
+  }
+
+  async getArchivedDailyTasks(page: number = 1, limit: number = 20) {
+    return this.request<DailyTask[], { pagination: any }>(`/daily-tasks/archived?page=${page}&limit=${limit}`);
+  }
+
+  async createDailyTask(data: CreateDailyTaskData) {
+    return this.request<DailyTask>('/daily-tasks', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async updateDailyTask(id: string, data: Partial<CreateDailyTaskData>) {
+    return this.request<DailyTask>(`/daily-tasks/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async markDailyTask(id: string, data: { date: string; completed: boolean; notes?: string }) {
+    return this.request<DailyTask>(`/daily-tasks/${id}/mark`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async archiveDailyTask(id: string) {
+    return this.request<DailyTask>(`/daily-tasks/${id}/archive`, {
+      method: 'POST'
+    });
+  }
+
+  async unarchiveDailyTask(id: string) {
+    return this.request<DailyTask>(`/daily-tasks/${id}/unarchive`, {
+      method: 'POST'
+    });
+  }
+
+  async deleteDailyTask(id: string) {
+    return this.request<{ message: string }>(`/daily-tasks/${id}`, {
+      method: 'DELETE'
+    });
+  }
+
+  async getDailyTaskStats() {
+    return this.request<DailyTaskStats>('/daily-tasks/stats');
+  }
+
+  async getDailyTaskCalendar(year?: number, month?: number) {
+    const searchParams = new URLSearchParams();
+    if (year) searchParams.append('year', year.toString());
+    if (month) searchParams.append('month', month.toString());
+    
+    return this.request<DailyTaskCalendarData[]>(`/daily-tasks/calendar?${searchParams}`);
+  }
 }
 
 // Type definitions
@@ -454,6 +632,7 @@ export interface Habit {
   id: string;
   name: string;
   description?: string;
+  icon?: string;
   type: 'binary' | 'quantitative';
   target: {
     value: number;
@@ -480,6 +659,7 @@ export interface Habit {
 export interface CreateHabitData {
   name: string;
   description?: string;
+  icon?: string;
   type: 'binary' | 'quantitative';
   target?: {
     value: number;
@@ -532,6 +712,16 @@ export interface Task {
     color: string;
     icon: string;
   }>;
+  isBirthday?: boolean;
+  birthdayPerson?: {
+    name?: string;
+    relationship?: string;
+    isOwnBirthday?: boolean;
+  };
+  recurringBirthday?: {
+    enabled?: boolean;
+    year?: number;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -542,6 +732,16 @@ export interface CreateTaskData {
   deadline: string;
   priority?: 'low' | 'medium' | 'high';
   categories?: string[];
+  isBirthday?: boolean;
+  birthdayPerson?: {
+    name?: string;
+    relationship?: string;
+    isOwnBirthday?: boolean;
+  };
+  recurringBirthday?: {
+    enabled?: boolean;
+    year?: number;
+  };
 }
 
 export interface UserStats {
@@ -839,6 +1039,257 @@ export interface ProductivityInsights {
       weekday: number;
     };
   };
+}
+
+// Timing Analytics Types
+export interface TimingAnalytics {
+  loginPatterns: {
+    hourlyDistribution: Array<{
+      hour: number;
+      count: number;
+      avgSessionDuration?: number;
+    }>;
+    dailyDistribution: Array<{
+      dayOfWeek: number;
+      dayName: string;
+      count: number;
+      avgSessionDuration?: number;
+    }>;
+    peakLoginHours: Array<{
+      hour: number;
+      count: number;
+      percentage: number;
+    }>;
+    weekendVsWeekday: {
+      weekend: { count: number; avgSessionDuration?: number };
+      weekday: { count: number; avgSessionDuration?: number };
+    };
+  };
+  habitCompletionPatterns: {
+    hourlyDistribution: Array<{
+      hour: number;
+      totalCompletions: number;
+      uniqueHabitsCount: number;
+      weekendCompletions: number;
+      weekdayCompletions: number;
+    }>;
+    dailyDistribution: Array<{
+      dayOfWeek: number;
+      dayName: string;
+      totalCompletions: number;
+      avgCompletionHour: number;
+    }>;
+    peakCompletionHours: Array<{
+      hour: number;
+      count: number;
+      percentage: number;
+    }>;
+    weekendVsWeekday: {
+      weekend: { count: number; avgHour: number };
+      weekday: { count: number; avgHour: number };
+    };
+  };
+  correlationInsights: {
+    loginVsCompletionCorrelation: number;
+    mostProductiveHoursAfterLogin: Array<{
+      hourAfterLogin: number;
+      completionRate: number;
+    }>;
+    sessionDurationVsCompletions: Array<{
+      sessionDurationRange: string;
+      avgCompletions: number;
+    }>;
+  };
+  summary: {
+    totalLogins: number;
+    totalCompletions: number;
+    avgLoginsPerDay: number;
+    avgCompletionsPerDay: number;
+    mostActiveHour: number;
+    mostActiveDay: string;
+    bestPerformanceCorrelation: string;
+  };
+}
+
+export interface PeakPerformanceInsights {
+  peakLoginHour: {
+    hour: number;
+    count: number;
+    percentage: number;
+  };
+  peakCompletionHour: {
+    hour: number;
+    count: number;
+    percentage: number;
+  };
+  mostProductiveHoursAfterLogin: Array<{
+    hourAfterLogin: number;
+    completionRate: number;
+  }>;
+  sessionDurationVsCompletions: Array<{
+    sessionDurationRange: string;
+    avgCompletions: number;
+  }>;
+  weekendVsWeekdayPreference: {
+    login: {
+      weekend: { count: number; avgSessionDuration?: number };
+      weekday: { count: number; avgSessionDuration?: number };
+    };
+    completion: {
+      weekend: { count: number; avgHour: number };
+      weekday: { count: number; avgHour: number };
+    };
+  };
+  recommendations: string[];
+}
+
+// How Long / Countdown Types
+export interface CountdownTask {
+  id: string;
+  title: string;
+  description?: string;
+  deadline: string;
+  priority: 'low' | 'medium' | 'high';
+  isBirthday?: boolean;
+  birthdayPerson?: {
+    name?: string;
+    relationship?: string;
+    isOwnBirthday?: boolean;
+  };
+  categories: Array<{
+    id: string;
+    name: string;
+    color: string;
+    icon: string;
+  }>;
+  timeRemaining: {
+    days: number;
+    hours: number;
+    minutes: number;
+    totalDays: number;
+    totalHours: number;
+    totalMinutes: number;
+    isOverdue: boolean;
+  };
+}
+
+export interface AppUsageStats {
+  totalLogins: number;
+  uniqueLoginDays: number;
+  avgSessionDuration: number; // in minutes
+  totalHabits: number;
+  totalTasks: number;
+  totalCompletions: number;
+  daysSinceMember: number;
+  memberSince: string;
+  mostActiveHour: number;
+  loginFrequency: string;
+  interestingFacts: string[];
+}
+
+// Daily Tasks Types
+export interface DailyTaskCompletion {
+  date: string;
+  completed: boolean;
+  completedAt?: string;
+  notes?: string;
+}
+
+export interface DailyTask {
+  id: string;
+  title: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high';
+  isActive: boolean;
+  archived: boolean;
+  archivedAt?: string;
+  categories: Array<{
+    id: string;
+    name: string;
+    color: string;
+    icon: string;
+  }>;
+  dailyCompletions: DailyTaskCompletion[];
+  todayCompletion?: DailyTaskCompletion;
+  completionStreak: number;
+  totalCompletions: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateDailyTaskData {
+  title: string;
+  description?: string;
+  priority?: 'low' | 'medium' | 'high';
+  categories?: string[];
+}
+
+export interface DailyTaskStats {
+  totalActive: number;
+  totalArchived: number;
+  thisMonthCompletions: number;
+  topTasks: Array<{
+    _id: string;
+    title: string;
+    completions: number;
+  }>;
+}
+
+export interface DailyTaskCalendarData {
+  date: string;
+  totalTasks: number;
+  completedTasks: number;
+  completionRate: number;
+  tasks: Array<{
+    taskId: string;
+    title: string;
+    completed: boolean;
+    notes?: string;
+  }>;
+}
+
+export interface DailyTaskAnalytics {
+  overview: {
+    totalTasks: number;
+    activeTasks: number;
+    archivedTasks: number;
+    completionRate: number;
+  };
+  completionTrends: Array<{
+    date: string;
+    completions: number;
+  }>;
+  weeklyPatterns: Array<{
+    day: string;
+    dayOfWeek: number;
+    completions: number;
+  }>;
+  topPerformingTasks: Array<{
+    _id: string;
+    title: string;
+    completions: number;
+    priority: string;
+  }>;
+  recentActivity: Array<{
+    _id: string;
+    title: string;
+    completedAt: string;
+    date: string;
+  }>;
+  summary: {
+    last7DaysCompletions: number;
+    averageDailyCompletions: number;
+    mostProductiveDay: string;
+  };
+}
+
+export interface DailyTaskOverview {
+  totalCreated: number;
+  totalActive: number;
+  totalArchived: number;
+  totalCompleted: number;
+  todayCompleted: number;
+  thisMonthCompleted: number;
 }
 
 export const api = new ApiClient();
